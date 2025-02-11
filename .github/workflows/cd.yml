@@ -22,22 +22,34 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Clean up after installation
-          deactivate
 
-      - name: Run tests
-        run: |
-          source venv/bin/activate
-          pytest tests
+      - name: Log in to Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Trigger deployment on Render
-      - name: Deploy
-        # Only run this step if the branch is main
-        if: github.ref == 'refs/heads/main'
-        env:
-          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      - name: Log in to Azure Container Registry
         run: |
-          curl "$deploy_url"
+          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/myapp:latest .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/myapp:latest
+
+      - name: Deploy to Azure Container Instance
+        run: |
+          az container create \
+          --resource-group MyResourceGroup \
+          --name fastapi-app-book-project \
+          --image ${{ secrets.ACR_LOGIN_SERVER }}/myapp:latest \
+          --cpu 1 \
+          --memory 1 \
+          --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
+          --registry-username ${{ secrets.ACR_USERNAME }} \
+          --registry-password ${{ secrets.ACR_PASSWORD }} \
+          --dns-name-label fastapi-app-book-project \
+          --ports 80 \
+          --os-type Linux
