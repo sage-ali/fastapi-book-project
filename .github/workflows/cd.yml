@@ -51,4 +51,5 @@ jobs:
           --registry-username ${{ secrets.ACR_USERNAME }} \
           --registry-password ${{ secrets.ACR_PASSWORD }} \
           --dns-name-label fastapi-app-book-project \
-          --ports 80
+          --ports 80 \
+          --os-type Linux
