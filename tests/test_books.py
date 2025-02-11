@@ -1,10 +1,14 @@
 from tests import client
 
+# Test to get all books
+
 
 def test_get_all_books():
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) == 3
+
+# Test to get a single book by ID
 
 
 def test_get_single_book():
@@ -13,6 +17,8 @@ def test_get_single_book():
     data = response.json()
     assert data["title"] == "The Hobbit"
     assert data["author"] == "J.R.R. Tolkien"
+
+# Test to create a new book
 
 
 def test_create_book():
@@ -29,6 +35,8 @@ def test_create_book():
     assert data["id"] == 4
     assert data["title"] == "Harry Potter and the Sorcerer's Stone"
 
+# Test to update an existing book by ID
+
 
 def test_update_book():
     updated_book = {
@@ -43,6 +51,8 @@ def test_update_book():
     data = response.json()
     assert data["title"] == "The Hobbit: An Unexpected Journey"
 
+# Test to delete a book by ID
+
 
 def test_delete_book():
     response = client.delete("/books/3")
@@ -50,3 +60,19 @@ def test_delete_book():
 
     response = client.get("/books/3")
     assert response.status_code == 404
+
+# Test to get a single book by ID (success case)
+
+
+def test_get_book_success():
+    response = client.get("/books/1")
+    assert response.status_code == 200
+    assert response.json()["title"] == "The Hobbit: An Unexpected Journey"
+
+# Test to get a single book by ID (not found case)
+
+
+def test_get_book_not_found():
+    response = client.get("/books/999")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Book not found"}
