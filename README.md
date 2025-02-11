@@ -79,6 +79,22 @@ uvicorn main:app
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+## Docker Setup and Deployment
+
+1. Build the Docker image:
+
+```bash
+docker build -t fastapi-app .
+```
+
+2. Run the Docker container:
+
+```bash
+docker run -d -p 80:80 -p 8000:8000 fastapi-app
+```
+
+This will start your FastAPI application with Nginx as a reverse proxy, all managed by Supervisor inside the Docker container.
+
 ## API Endpoints
 
 ### Books
