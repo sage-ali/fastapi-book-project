@@ -44,15 +44,15 @@ jobs:
           --ports 80 \
           --os-type Linux
 
-        - name: Verify Deployment
+      - name: Verify Deployment
         run: |
-        echo "Waiting for the container to be deployed..."
-        for i in {1..10}; do
-            if curl -f http://fastapi-app-book-project.eastus.azurecontainer.io/api/v1/books; then
-            echo "Deployment successful!"
-            exit 0
-            fi
-            sleep 5
-        done
-        echo "Deployment failed!"
-        exit 1
+          echo "Waiting for the container to be deployed..."
+          for i in {1..10}; do
+              if curl -f http://fastapi-app-book-project.eastus.azurecontainer.io/api/v1/books; then
+                echo "Deployment successful!"
+                exit 0
+              fi
+              sleep 5
+          done
+          echo "Deployment failed!"
+          exit 1
