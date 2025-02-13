@@ -38,16 +38,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/myapp:${{ env.TIMESTAMP }}
 
       - name: Update Azure Container Instance
         run: |
-          IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
+          IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:${{ env.TIMESTAMP }}
           az container update \
             --resource-group MyResourceGroup \
             --name fastapi-app-book-project \
