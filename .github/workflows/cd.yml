@@ -13,28 +13,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        uses: actions/checkout@v3
 
       - name: Log in to Azure CLI
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Log in to Docker Registry
+        run: echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
       - name: Build and push Docker image and Deploy to Azure Container Instance
         run: |
           IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
-          docker build -t $IMAGE_TAG .
-          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+          docker build -t  $IMAGE_TAG .
           docker push $IMAGE_TAG
           az container create \
           --resource-group MyResourceGroup \
@@ -48,3 +41,16 @@ jobs:
           --dns-name-label fastapi-app-book-project \
           --ports 80 \
           --os-type Linux
+
+      - name: Verify Deployment
+        run: |
+          echo "Waiting for the container to be deployed..."
+          for i in {1..10}; do
+              if curl -f http://fastapi-app-book-project.eastus.azurecontainer.io/api/v1/books; then
+                echo "Deployment successful!"
+                exit 0
+              fi
+              sleep 5
+          done
+          echo "Deployment failed!"
+          exit 1
