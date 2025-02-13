@@ -10,33 +10,18 @@ jobs:
   deploy:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        task: [azure_login, docker_login]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Log in to Azure CLI
-        if: matrix.task == 'azure_login'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Log in to Docker Registry
-        if: matrix.task == 'docker_login'
         run: |
-          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
-
-  build_and_deploy:
-    needs: deploy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+        echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
       - name: Set up timestamp
         id: timestamp
