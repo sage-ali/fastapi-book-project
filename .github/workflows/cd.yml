@@ -11,42 +11,58 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        task: [azure_login, docker_login]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Log in to Azure CLI
+        if: matrix.task == 'azure_login'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Log in to Docker Registry
-        run: echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+        if: matrix.task == 'docker_login'
+        run: |
+          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      - name: Build and push Docker image and Deploy to Azure Container Instance
+  build_and_deploy:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update Azure Container Instance
         run: |
           IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
-
-          docker build -t  $IMAGE_TAG .
-          docker push $IMAGE_TAG
-          az container create \
-          --resource-group MyResourceGroup \
-          --name fastapi-app-book-project \
-          --image $IMAGE_TAG \
-          --cpu 1 \
-          --memory 1 \
-          --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
-          --registry-username ${{ secrets.ACR_USERNAME }} \
-          --registry-password ${{ secrets.ACR_PASSWORD }} \
-          --dns-name-label fastapi-app-book-project \
-          --ports 80 \
-          --os-type Linux
+          az container update \
+            --resource-group MyResourceGroup \
+            --name fastapi-app-book-project \
+            --image $IMAGE_TAG \
+            --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }}
 
       - name: Verify Deployment
         run: |
-          echo "Waiting for the container to be deployed..."
+          echo "Waiting for the container to be updated..."
           for i in {1..10}; do
-              if curl -f http://fastapi-app-book-project.eastus.azurecontainer.io/api/v1/books; then
+              if curl -f --max-time 5 http://fastapi-app-book-project.eastus.azurecontainer.io/stage2; then
                 echo "Deployment successful!"
                 exit 0
               fi
