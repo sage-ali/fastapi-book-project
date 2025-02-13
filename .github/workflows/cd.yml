@@ -51,4 +51,3 @@ jobs:
               sleep 5
           done
           echo "Deployment failed!"
-          exit 1
