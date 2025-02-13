@@ -36,7 +36,6 @@ jobs:
 
       - name: Update Azure Container Instance
         run: |
-          IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:${{ env.TIMESTAMP }}
           az container restart \
             --resource-group MyResourceGroup \
             --name fastapi-app-book-project
