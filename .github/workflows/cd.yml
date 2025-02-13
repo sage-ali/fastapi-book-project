@@ -44,8 +44,6 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.ACR_LOGIN_SERVER }}/myapp:$(date +%Y%m%d%H%M%S)
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Update Azure Container Instance
         run: |
