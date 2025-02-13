@@ -29,7 +29,6 @@ jobs:
 
           docker build -t  $IMAGE_TAG .
           docker push $IMAGE_TAG
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/myapp:cache
           az container create \
           --resource-group MyResourceGroup \
           --name fastapi-app-book-project \
