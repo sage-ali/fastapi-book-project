@@ -12,7 +12,11 @@ tests
 # Ignore Git files
 .git
 .gitignore
+.github
 
-# Ignore Dockerfile and .dockerignore
-Dockerfile
-.dockerignore
+# Ignore Docker cache
+.pytest_cache
+
+# Ignore local IDE settings
+*.vscode
+*.idea
