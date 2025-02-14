@@ -36,9 +36,19 @@ jobs:
 
       - name: Update Azure Container Instance
         run: |
-          az container restart \
+          IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:${{ env.TIMESTAMP }}
+          az container create \
             --resource-group MyResourceGroup \
-            --name fastapi-app-book-project
+            --name fastapi-app-book-project \
+            --image $IMAGE_TAG \
+            --cpu 1 \
+            --memory 1 \
+            --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --dns-name-label fastapi-app-book-project \
+            --ports 80 \
+            --os-type Linux
 
       - name: Verify Deployment
         run: |
