@@ -37,24 +37,16 @@ jobs:
       - name: Update Azure Container Instance
         run: |
           IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/myapp:${{ env.TIMESTAMP }}
-          az container create \
+          az containerapp update \
             --resource-group MyResourceGroup \
             --name fastapi-app-book-project \
-            --image $IMAGE_TAG \
-            --cpu 1 \
-            --memory 1 \
-            --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --dns-name-label fastapi-app-book-project \
-            --ports 80 \
-            --os-type Linux
+            --image $IMAGE_TAG
 
       - name: Verify Deployment
         run: |
           echo "Waiting for the container to be updated..."
           for i in {1..10}; do
-              if curl -f --max-time 5 http://fastapi-app-book-project.eastus.azurecontainer.io/api/v1/books; then
+              if curl -f --max-time 5 http://fastapi-app-book-project.prouddesert-dc701ba3.uksouth.azurecontainerapps.io/api/v1/books; then
                 echo "Deployment successful!"
                 exit 0
               fi
